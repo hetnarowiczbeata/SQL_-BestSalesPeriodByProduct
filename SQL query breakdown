@@ -1,0 +1,14 @@
+WITH pomiesiacu AS (SELECT products.ProductID,SUM(order_details.Quantity) as suma, DATE_FORMAT(orders.OrderDate, "%Y_%m") as rok_miesiac
+FROM products
+LEFT JOIN order_details ON products.ProductID=order_details.ProductID
+LEFT JOIN orders ON order_details.OrderID=orders.OrderID
+GROUP BY products.ProductID,DATE_FORMAT(orders.OrderDate, "%Y_%m")), -- This Common Table Expression (pomiesiacu) calculates the total quantity sold (suma) for each product per month (rok_miesiac) using the format "YYYY_MM". 
+It joins the products, order_details, and orders tables and groups the results by product and month.
+
+ranki AS(SELECT ProductID, suma, RANK() OVER(PARTITION BY ProductID ORDER BY suma DESC) as rank, rok_miesiac
+FROM pomiesiacu) --  This CTE (ranki) assigns a rank (rank) to each product’s monthly sales total (suma), ordering the months by highest to lowest sales per product using a window function.
+
+
+SELECT ProductID, suma,rank
+FROM ranki
+WHERE rank=1;-- Selects the top-selling month (rank = 1) for each product
